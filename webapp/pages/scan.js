@@ -1,4 +1,4 @@
-import { navigate, API, showToast, tg, state } from '../app.js';
+import { navigate, API, tg } from '../app.js';
 
 let scanner  = null;
 let scanning = false;
@@ -8,47 +8,48 @@ export function renderScan(container, _params, st) {
   done = false;
 
   container.innerHTML = `
-    <div class="page scan-page">
+    <div class="scan-page">
 
-      <!-- Camera viewport -->
-      <div class="scan-viewport">
+      <!-- Header overlay -->
+      <div class="scan-page-header">
+        <button class="scan-back" id="scan-back-btn">←</button>
+        <div class="scan-page-title">Scan QR Code</div>
+      </div>
+
+      <!-- Camera -->
+      <div class="scan-camera-wrap">
         <div id="qr-reader"></div>
-        <!-- Corner decorations -->
-        <div class="corner tl"></div>
-        <div class="corner tr"></div>
-        <div class="corner bl"></div>
-        <div class="corner br"></div>
-        <!-- Scan line animation -->
-        <div class="scan-line"></div>
+
+        <!-- Dark overlay with transparent center -->
+        <div class="qr-overlay">
+          <div class="qr-overlay-dark top"></div>
+          <div class="qr-overlay-dark bottom"></div>
+          <div class="qr-overlay-dark left"></div>
+          <div class="qr-overlay-dark right"></div>
+        </div>
+
+        <!-- Frame corners -->
+        <div class="qr-frame">
+          <div class="qr-corner tl"></div>
+          <div class="qr-corner tr"></div>
+          <div class="qr-corner bl"></div>
+          <div class="qr-corner br"></div>
+          <div class="qr-scan-line"></div>
+        </div>
       </div>
 
       <!-- Bottom sheet -->
-      <div class="scan-sheet">
-        <div class="scan-sheet-handle"></div>
-
-        <div id="scan-status" class="scan-status-idle">
-          <div class="scan-status-icon">📷</div>
-          <div class="scan-status-title">Point at QR Code</div>
-          <div class="scan-status-sub">Ask the barista to show the shop QR code</div>
+      <div class="scan-bottom" id="scan-bottom">
+        <div id="scan-status">
+          <div class="scan-hint-text">Point your camera at the barista's QR code</div>
         </div>
-
-        <!-- Shown after result -->
-        <button id="scan-retry" class="scan-retry-btn" style="display:none">
-          Try again
-        </button>
       </div>
 
     </div>
   `;
 
+  container.querySelector('#scan-back-btn').addEventListener('click', () => stopAndGo('home'));
   startScanner(st);
-
-  container.querySelector('#scan-retry')?.addEventListener('click', () => {
-    done = false;
-    setStatus('idle');
-    container.querySelector('#scan-retry').style.display = 'none';
-    startScanner(st);
-  });
 }
 
 function startScanner(st) {
@@ -62,17 +63,16 @@ function startScanner(st) {
     scanner
       .start(
         { facingMode: 'environment' },
-        { fps: 12, qrbox: { width: 230, height: 230 }, aspectRatio: 1 },
+        { fps: 12, qrbox: { width: 220, height: 220 }, aspectRatio: 1 },
         (text) => onDecoded(text, st),
         () => {}
       )
       .then(() => {
         scanning = true;
-        // Hide html5-qrcode default toolbar
         document.getElementById('qr-reader__dashboard')?.remove();
       })
       .catch(() => {
-        setStatus('error', '❌', 'Camera denied', 'Allow camera access in your browser settings, then retry.');
+        showResult('error', '📵', 'Camera access denied', 'Allow camera access in your browser settings, then retry.');
       });
   } catch (e) { console.error(e); }
 }
@@ -80,76 +80,93 @@ function startScanner(st) {
 async function onDecoded(text, st) {
   if (done) return;
   done = true;
-
   scanner?.pause(true);
+
   navigator.vibrate?.(80);
   tg?.HapticFeedback?.impactOccurred('medium');
 
-  setStatus('loading', '⏳', 'Validating…', 'Checking QR code with server');
+  showLoading('Validating QR code…');
 
   try {
     const result = await API.scan(st.userId, text);
 
-    // Update local stamp count
+    // Update local state
     if (st.user && result.shopId) {
-      st.user.coffees         = st.user.coffees || {};
+      st.user.coffees = st.user.coffees || {};
       st.user.coffees[result.shopId] = result.coffees;
-      st.user.rewards         = result.rewards;
+      st.user.rewards = result.rewards;
     }
 
-    tg?.HapticFeedback?.notificationOccurred(result.freeEarned ? 'success' : 'success');
+    tg?.HapticFeedback?.notificationOccurred('success');
 
     if (result.freeEarned) {
-      setStatus('success', '🎉', 'Free coffee!', result.message);
+      showResult('success', '🎉', 'Free coffee earned!', result.message);
     } else {
-      setStatus('success', '✅', `+1 stamp!`, result.message);
+      showResult('success', '✅', `+1 stamp added!`, result.message);
     }
 
-    // Notify Telegram bot
-    if (tg?.sendData) {
-      try { tg.sendData(JSON.stringify({ type: 'scan_success', message: result.message })); } catch {}
-    }
-
-    // Auto return to home after 2.5s
-    setTimeout(() => navigate('home'), 2500);
+    setTimeout(() => stopAndGo('home'), 2500);
 
   } catch (err) {
     tg?.HapticFeedback?.notificationOccurred('error');
-    setStatus('error', '❌', 'Failed', err.message || 'Something went wrong. Try again.');
-    document.getElementById('scan-retry').style.display = 'block';
+    showResult('error', '❌', 'Scan failed', err.message || 'Try again.');
+    showRetry(st);
     done = false;
   }
 }
 
-function setStatus(type, icon = '', title = '', sub = '') {
+function showLoading(text) {
   const el = document.getElementById('scan-status');
   if (!el) return;
-
-  const classes = { idle: 'scan-status-idle', loading: 'scan-status-loading', success: 'scan-status-success', error: 'scan-status-error' };
-  el.className = classes[type] || 'scan-status-idle';
-
-  if (type === 'idle') {
-    el.innerHTML = `
-      <div class="scan-status-icon">📷</div>
-      <div class="scan-status-title">Point at QR Code</div>
-      <div class="scan-status-sub">Ask the barista to show the shop QR code</div>
-    `;
-    return;
-  }
-
-  if (type === 'loading') {
-    el.innerHTML = `<div class="scan-spinner"></div><div class="scan-status-title">${title}</div>`;
-    return;
-  }
-
   el.innerHTML = `
-    <div class="scan-status-icon">${icon}</div>
-    <div class="scan-status-title">${escHtml(title)}</div>
-    <div class="scan-status-sub">${escHtml(sub)}</div>
+    <div class="scan-result-card">
+      <div class="scan-spinner-wrap">
+        <div class="scan-spinner"></div>
+        <div class="scan-loading-text">${text}</div>
+      </div>
+    </div>
   `;
 }
 
-function escHtml(str) {
+function showResult(type, emoji, title, msg) {
+  const el = document.getElementById('scan-status');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="scan-result-card ${type}">
+      <div class="scan-result-emoji">${emoji}</div>
+      <div class="scan-result-title">${esc(title)}</div>
+      <div class="scan-result-msg">${esc(msg)}</div>
+    </div>
+  `;
+}
+
+function showRetry(st) {
+  const el = document.getElementById('scan-status');
+  if (!el) return;
+  const btn = document.createElement('button');
+  btn.className = 'scan-retry-btn';
+  btn.textContent = 'Try again';
+  btn.addEventListener('click', () => {
+    done = false;
+    el.innerHTML = `<div class="scan-hint-text">Point your camera at the barista's QR code</div>`;
+    startScanner(st);
+  });
+  el.appendChild(btn);
+}
+
+function stopAndGo(route) {
+  if (scanner) {
+    scanner.stop().catch(() => {}).finally(() => {
+      scanner = null;
+      scanning = false;
+      navigate(route);
+    });
+  } else {
+    navigate(route);
+  }
+}
+
+function esc(str) {
   return String(str).replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
   );

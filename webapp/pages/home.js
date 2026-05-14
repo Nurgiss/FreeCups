@@ -8,127 +8,130 @@ export function renderHome(container, _params, st) {
   const rewards = st.user?.rewards || 0;
   const pct     = Math.round((stamps / STAMPS_REQUIRED) * 100);
   const need    = STAMPS_REQUIRED - stamps;
+  const name    = st.userName || 'Guest';
+  const initial = name.charAt(0).toUpperCase();
 
-  // ── Telegram MainButton → "Scan QR" ────────────────────────────────────────
-  if (tg?.MainButton) {
-    tg.MainButton.setText('📷  Scan QR Code');
-    tg.MainButton.color      = tg.themeParams.button_color      || '#7c6aff';
-    tg.MainButton.textColor  = tg.themeParams.button_text_color || '#ffffff';
-    tg.MainButton.show();
-    // Replace listener each render to avoid duplicates
-    tg.MainButton.offClick(onScanClick);
-    tg.MainButton.onClick(onScanClick);
-  }
-
-  // ── Render ──────────────────────────────────────────────────────────────────
   container.innerHTML = `
     <div class="page">
 
-      <!-- Top bar -->
-      <div class="topbar">
-        <div class="topbar-logo">FreeCups</div>
-        <div class="topbar-tagline">Coffee loyalty</div>
+      <!-- Header -->
+      <div class="app-header">
+        <div class="header-left">
+          <div class="header-hi">Welcome back 👋</div>
+          <div class="header-name">${esc(name)}</div>
+        </div>
+        <div class="header-avatar">${initial}</div>
       </div>
 
-      <!-- Free coffee banner -->
+      <!-- Stats strip -->
+      <div class="stats-strip">
+        <div class="stat-item">
+          <div class="stat-val">${stamps}</div>
+          <div class="stat-lbl">Stamps</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">${rewards}</div>
+          <div class="stat-lbl">Free coffees</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">${need > 0 ? need : '🎉'}</div>
+          <div class="stat-lbl">${need > 0 ? 'Until free' : 'Ready!'}</div>
+        </div>
+      </div>
+
       ${rewards > 0 ? `
-      <div class="free-banner">
-        <span class="free-banner-icon">🎉</span>
+      <!-- Reward banner -->
+      <div class="reward-banner">
+        <div class="reward-icon">🎁</div>
         <div>
-          <div class="free-banner-label">FREE COFFEE READY</div>
-          <div class="free-banner-value">${rewards} reward${rewards !== 1 ? 's' : ''} waiting</div>
+          <div class="reward-label">Free coffee ready</div>
+          <div class="reward-value">${rewards} reward${rewards !== 1 ? 's' : ''} waiting for you</div>
         </div>
       </div>` : ''}
 
-      <!-- Card -->
-      <div class="card">
-        <div class="card-header">
+      <!-- Loyalty card label -->
+      <div class="section-label">Your loyalty card</div>
+
+      <!-- Loyalty Card -->
+      <div class="loyalty-card">
+        <div class="card-row">
           <div>
-            <div class="card-shop">${st.shop ? escHtml(st.shop.name) : 'Your Card'}</div>
-            <div class="card-sub">Coffee loyalty card</div>
+            <div class="card-shop-name">${st.shop ? esc(st.shop.name) : 'FreeCups'}</div>
+            <div class="card-shop-tagline">Coffee loyalty card</div>
           </div>
-          <div class="card-badge">${stamps}/${STAMPS_REQUIRED}</div>
+          <div class="card-count-badge">${stamps} / ${STAMPS_REQUIRED}</div>
         </div>
 
-        <!-- Stamp grid -->
         <div class="stamp-grid">
           ${Array.from({ length: STAMPS_REQUIRED }, (_, i) => `
-            <div class="stamp ${i < stamps ? 'filled' : 'empty'}" style="${i < stamps ? `animation-delay:${i * 60}ms` : ''}">
+            <div class="stamp ${i < stamps ? 'filled' : 'empty'}" style="${i < stamps ? `animation-delay:${i * 70}ms` : ''}">
               ${i < stamps ? '☕' : ''}
             </div>
           `).join('')}
         </div>
 
-        <!-- Progress bar -->
-        <div class="progress-wrap">
-          <div class="progress-fill" style="width:${pct}%"></div>
+        <div class="progress-meta">
+          <span class="progress-text">${need > 0 ? `${need} more stamp${need !== 1 ? 's' : ''} for a free coffee` : '🎉 Free coffee earned!'}</span>
+          <span class="progress-num">${pct}%</span>
         </div>
-        <div class="progress-labels">
-          <span class="muted">${need > 0 ? `${need} more for free coffee` : '🎉 Free coffee earned!'}</span>
-          <span class="muted">${pct}%</span>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${pct}%"></div>
         </div>
       </div>
 
-      <!-- Stats row -->
-      <div class="stats">
-        <div class="stat-box">
-          <div class="stat-num purple">${stamps}</div>
-          <div class="stat-lbl">Stamps</div>
+      <!-- Scan CTA button -->
+      <button class="scan-cta" id="scan-btn">
+        <div class="scan-cta-left">
+          <div class="scan-cta-title">Scan QR Code</div>
+          <div class="scan-cta-sub">Ask the barista to show the QR</div>
         </div>
-        <div class="stat-divider"></div>
-        <div class="stat-box">
-          <div class="stat-num green">${rewards}</div>
-          <div class="stat-lbl">Free coffees</div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-box">
-          <div class="stat-num">${Math.floor(((stamps + rewards * STAMPS_REQUIRED)) / 1) }</div>
-          <div class="stat-lbl">Total ever</div>
-        </div>
-      </div>
+        <div class="scan-cta-icon">📷</div>
+      </button>
 
       <!-- How it works -->
-      <div class="how-section">
-        <div class="how-title">How it works</div>
-        <div class="how-steps">
-          <div class="how-step">
-            <div class="how-step-icon">☕</div>
-            <div class="how-step-text">Buy a coffee</div>
-          </div>
-          <div class="how-arrow">→</div>
-          <div class="how-step">
-            <div class="how-step-icon">📷</div>
-            <div class="how-step-text">Scan QR</div>
-          </div>
-          <div class="how-arrow">→</div>
-          <div class="how-step">
-            <div class="how-step-icon">🎁</div>
-            <div class="how-step-text">6th is free</div>
-          </div>
+      <div class="section-label">How it works</div>
+      <div class="how-row">
+        <div class="how-step">
+          <div class="how-icon">☕</div>
+          <div class="how-title">Buy coffee</div>
+          <div class="how-desc">At any FreeCups partner</div>
+        </div>
+        <div class="how-step">
+          <div class="how-icon">📷</div>
+          <div class="how-title">Scan QR</div>
+          <div class="how-desc">Barista shows the code</div>
+        </div>
+        <div class="how-step">
+          <div class="how-icon">🎁</div>
+          <div class="how-title">6th free</div>
+          <div class="how-desc">Enjoy your reward!</div>
         </div>
       </div>
 
-      <!-- Fallback scan button (shown only if NOT inside Telegram) -->
-      ${!tg ? `
-      <div style="padding: 0 16px 32px;">
-        <button class="scan-fallback-btn" id="scan-btn">📷 Scan QR Code</button>
-      </div>` : '<!-- MainButton used -->'}
-
-      <!-- Bottom safe area spacer for MainButton -->
-      <div style="height: ${tg ? '80px' : '0'}"></div>
-
     </div>
+
+    <!-- Bottom nav -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active">
+        <span class="nav-icon">🏠</span>
+        Home
+      </button>
+      <button class="nav-btn nav-btn-center" id="nav-scan-btn">
+        <div class="nav-center-circle">📷</div>
+        Scan
+      </button>
+      <button class="nav-btn" disabled style="opacity:0.3">
+        <span class="nav-icon">👤</span>
+        Profile
+      </button>
+    </nav>
   `;
 
-  // Fallback button (non-Telegram browser / dev)
-  container.querySelector('#scan-btn')?.addEventListener('click', onScanClick);
+  container.querySelector('#scan-btn')?.addEventListener('click', () => navigate('scan'));
+  container.querySelector('#nav-scan-btn')?.addEventListener('click', () => navigate('scan'));
 }
 
-function onScanClick() {
-  navigate('scan');
-}
-
-function escHtml(str) {
+function esc(str) {
   return String(str).replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
   );
