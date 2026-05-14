@@ -293,6 +293,29 @@ html, body {
 .scan-cta-sub   { font-size: 12px; opacity: 0.7; margin-top: 2px; }
 .scan-cta-icon  { font-size: 30px; }
 
+/* ── User QR Card ────────────────────────────────────────────── */
+.user-qr-card {
+  margin: 0 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.user-qr-wrap {
+  background: #1c1035;
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  border: 1px solid rgba(124,92,252,0.2);
+  display: inline-block;
+}
+.user-qr-wrap canvas, .user-qr-wrap img { display: block; border-radius: 6px; }
+.user-qr-hint { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.4; }
+.user-qr-expires { font-size: 12px; font-weight: 600; color: var(--primary2); }
+
 /* ── How steps ───────────────────────────────────────────────── */
 .how-row {
   margin: 0 16px;

@@ -4,9 +4,10 @@ const helmet  = require('helmet');
 const cors    = require('cors');
 const { initFirebase } = require('./firebase');
 
-const scanRouter  = require('./routes/scan');
-const userRouter  = require('./routes/user');
-const shopsRouter = require('./routes/shops');
+const scanRouter    = require('./routes/scan');
+const userRouter    = require('./routes/user');
+const shopsRouter   = require('./routes/shops');
+const baristaRouter = require('./routes/barista');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -34,9 +35,10 @@ if (process.env.TELEGRAM_BOT_TOKEN && process.env.WEBHOOK_URL) {
 }
 
 // ── API Routes ────────────────────────────────────────────────────────────────
-app.use('/scan',  scanRouter);
-app.use('/user',  userRouter);
-app.use('/shops', shopsRouter);
+app.use('/scan',    scanRouter);
+app.use('/user',    userRouter);
+app.use('/shops',   shopsRouter);
+app.use('/barista', baristaRouter);
 
 // ── Single-shop shortcut: GET /shop ──────────────────────────────────────────
 app.get('/shop', async (_req, res, next) => {

@@ -79,14 +79,15 @@ export function renderHome(container, _params, st) {
         </div>
       </div>
 
-      <!-- Scan CTA button -->
-      <button class="scan-cta" id="scan-btn">
-        <div class="scan-cta-left">
-          <div class="scan-cta-title">Scan QR Code</div>
-          <div class="scan-cta-sub">Ask the barista to show the QR</div>
+      <!-- QR Code section -->
+      <div class="section-label">Your QR code</div>
+      <div class="user-qr-card">
+        <div class="user-qr-wrap">
+          <div id="user-qr-canvas"></div>
         </div>
-        <div class="scan-cta-icon">📷</div>
-      </button>
+        <div class="user-qr-hint">Show this to the barista to get your stamp</div>
+        <div class="user-qr-expires" id="qr-expires"></div>
+      </div>
 
       <!-- How it works -->
       <div class="section-label">How it works</div>
@@ -129,6 +130,47 @@ export function renderHome(container, _params, st) {
 
   container.querySelector('#scan-btn')?.addEventListener('click', () => navigate('scan'));
   container.querySelector('#nav-scan-btn')?.addEventListener('click', () => navigate('scan'));
+
+  // Generate user QR code
+  generateUserQR(st.userId);
+}
+
+function generateUserQR(userId) {
+  const el = document.getElementById('user-qr-canvas');
+  if (!el || !window.QRCode) return;
+
+  const ts = Date.now();
+  const qrData = JSON.stringify({ userId, ts });
+
+  new window.QRCode(el, {
+    text: qrData,
+    width: 200,
+    height: 200,
+    colorDark: '#ffffff',
+    colorLight: '#1c1035',
+    correctLevel: window.QRCode.CorrectLevel.M,
+  });
+
+  // Show expiry countdown
+  const expiresEl = document.getElementById('qr-expires');
+  const expiresAt = ts + 10 * 60 * 1000;
+  const tick = () => {
+    const left = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+    if (!expiresEl) return;
+    const m = Math.floor(left / 60);
+    const s = left % 60;
+    expiresEl.textContent = left > 0
+      ? `Expires in ${m}:${String(s).padStart(2, '0')}`
+      : 'Expired — refresh the page';
+    if (left > 0) setTimeout(tick, 1000);
+    else {
+      expiresEl.style.color = 'var(--error)';
+      // Regenerate QR
+      el.innerHTML = '';
+      generateUserQR(userId);
+    }
+  };
+  tick();
 }
 
 function esc(str) {

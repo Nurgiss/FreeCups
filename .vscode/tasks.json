@@ -1,0 +1,10 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Deploy barista flow",
+			"type": "shell",
+			"command": "cd /Users/anurarbnu/Documents/FreeCups && git add -A && git commit -m 'feat: barista panel + user QR code flow' && git push && ssh ubuntu@82.115.43.205 'cd /var/www/freecups && git pull && pm2 restart freecups-backend'"
+		}
+	]
+}
