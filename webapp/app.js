@@ -95,6 +95,18 @@ function goHome() {
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 async function init() {
+  const appEl = document.getElementById('app');
+
+  // Safety timeout: if still loading after 8s, show error
+  const timeout = setTimeout(() => {
+    appEl.innerHTML = `<div style="padding:32px;text-align:center;color:#fff">
+      <div style="font-size:2rem">⚠️</div>
+      <div style="margin-top:12px;font-size:1rem">Failed to load</div>
+      <div style="margin-top:8px;font-size:0.8rem;opacity:0.6">Backend: ${window.BACKEND_URL}</div>
+      <button onclick="location.reload()" style="margin-top:16px;padding:10px 24px;background:#7c6aff;color:#fff;border:none;border-radius:8px;font-size:1rem">Retry</button>
+    </div>`;
+  }, 8000);
+
   try {
     const [user, shop] = await Promise.all([
       API.getUser(state.userId).catch(() => ({ id: state.userId, coffees: {}, rewards: 0, lastScanAt: {} })),
@@ -107,7 +119,8 @@ async function init() {
     state.shop = null;
   }
 
-  renderHome(document.getElementById('app'), {}, state);
+  clearTimeout(timeout);
+  renderHome(appEl, {}, state);
 }
 
 init();
