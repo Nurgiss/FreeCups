@@ -1,0 +1,486 @@
+/* ═══════════════════════════════════════════════════════════════
+   FreeCups — Telegram Mini App
+   Dark Revolut-style UI that inherits Telegram theme vars
+   ═══════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Defaults — overridden at runtime from tg.themeParams */
+  --tg-bg:       #0a0a0f;
+  --tg-surface:  #13131a;
+  --tg-text:     #ffffff;
+  --tg-hint:     rgba(255,255,255,0.45);
+  --tg-button:   #7c6aff;
+  --tg-btn-text: #ffffff;
+
+  /* App-specific */
+  --card:        #1c1c27;
+  --border:      #2a2a38;
+  --primary:     #7c6aff;
+  --primary-end: #a78bfa;
+  --success:     #22c55e;
+  --radius:      18px;
+  --radius-sm:   12px;
+  --transition:  0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html, body {
+  height: 100%;
+  background: var(--tg-bg);
+  color: var(--tg-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+#app { min-height: 100vh; }
+
+/* ── Page ────────────────────────────────────────────────────── */
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  animation: fadeUp 0.22s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Top bar ─────────────────────────────────────────────────── */
+.topbar {
+  padding: 16px 20px 12px;
+  background: var(--tg-surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.topbar-logo {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.topbar-tagline {
+  font-size: 12px;
+  color: var(--tg-hint);
+  font-weight: 500;
+}
+
+/* ── Free coffee banner ──────────────────────────────────────── */
+.free-banner {
+  margin: 14px 16px 0;
+  background: linear-gradient(135deg, rgba(34,197,94,0.14), rgba(34,197,94,0.07));
+  border: 1px solid rgba(34,197,94,0.35);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: fadeUp 0.3s ease both;
+}
+
+.free-banner-icon { font-size: 28px; }
+.free-banner-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #22c55e;
+  text-transform: uppercase;
+}
+.free-banner-value { font-size: 16px; font-weight: 700; color: #22c55e; }
+
+/* ── Loyalty card ────────────────────────────────────────────── */
+.card {
+  margin: 14px 16px 0;
+  background: linear-gradient(145deg, #1e1b38 0%, #16162a 100%);
+  border: 1px solid rgba(124,106,255,0.22);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; right: -40px;
+  width: 140px; height: 140px;
+  background: radial-gradient(circle, rgba(124,106,255,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.card-shop { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+.card-sub  { font-size: 12px; color: var(--tg-hint); margin-top: 2px; }
+
+.card-badge {
+  background: linear-gradient(135deg, var(--primary), var(--primary-end));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+/* ── Stamp grid ──────────────────────────────────────────────── */
+.stamp-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.stamp {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: transform var(--transition);
+}
+
+.stamp.filled {
+  background: linear-gradient(135deg, var(--primary), var(--primary-end));
+  box-shadow: 0 3px 10px rgba(124,106,255,0.45);
+  animation: stampPop 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.stamp.empty {
+  background: rgba(255,255,255,0.05);
+  border: 1.5px dashed rgba(255,255,255,0.1);
+}
+
+@keyframes stampPop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  65%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Progress bar ────────────────────────────────────────────── */
+.progress-wrap {
+  background: rgba(255,255,255,0.07);
+  border-radius: 99px;
+  height: 5px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-end));
+  transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 4px;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+}
+
+.muted { font-size: 12px; color: var(--tg-hint); }
+
+/* ── Stats row ───────────────────────────────────────────────── */
+.stats {
+  display: flex;
+  align-items: center;
+  margin: 12px 16px 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.stat-box {
+  flex: 1;
+  text-align: center;
+  padding: 14px 8px;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--border);
+}
+
+.stat-num {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-num.purple {
+  background: linear-gradient(135deg, var(--primary), var(--primary-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-num.green { color: var(--success); }
+
+.stat-lbl {
+  font-size: 11px;
+  color: var(--tg-hint);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* ── How it works ────────────────────────────────────────────── */
+.how-section {
+  margin: 16px 16px 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.how-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--tg-hint);
+  margin-bottom: 14px;
+}
+
+.how-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.how-step {
+  text-align: center;
+  flex: 1;
+}
+
+.how-step-icon { font-size: 24px; margin-bottom: 6px; }
+.how-step-text { font-size: 12px; color: var(--tg-hint); font-weight: 500; }
+.how-arrow     { color: var(--tg-hint); font-size: 16px; flex-shrink: 0; }
+
+/* ── Fallback scan button (non-Telegram) ─────────────────────── */
+.scan-fallback-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-end));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(124,106,255,0.35);
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.scan-fallback-btn:active { transform: scale(0.97); opacity: 0.85; }
+
+/* ══════════════════════════════════════════════════════════════
+   SCAN PAGE
+   ══════════════════════════════════════════════════════════════ */
+.scan-page { background: #000; }
+
+/* ── Camera viewport fills top ~60% ─────────────────────────── */
+.scan-viewport {
+  position: relative;
+  flex: 1;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 55vh;
+  overflow: hidden;
+}
+
+#qr-reader {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+}
+
+/* Strip all html5-qrcode default UI */
+#qr-reader__scan_region { background: transparent !important; }
+#qr-reader__dashboard,
+#qr-reader__header_message,
+#qr-reader__status_span { display: none !important; }
+
+#qr-reader video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* ── Corner brackets ─────────────────────────────────────────── */
+.corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-color: #ffffff;
+  border-style: solid;
+  opacity: 0.9;
+}
+.corner.tl { top: calc(50% - 58px); left: calc(50% - 58px); border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+.corner.tr { top: calc(50% - 58px); right: calc(50% - 58px); border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+.corner.bl { bottom: calc(50% - 58px); left: calc(50% - 58px); border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+.corner.br { bottom: calc(50% - 58px); right: calc(50% - 58px); border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+/* ── Animated scan line ──────────────────────────────────────── */
+.scan-line {
+  position: absolute;
+  left: calc(50% - 55px);
+  width: 110px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  border-radius: 99px;
+  animation: scanMove 2s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--primary);
+}
+
+@keyframes scanMove {
+  0%   { top: calc(50% - 54px); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: calc(50% + 54px); opacity: 0; }
+}
+
+/* ── Bottom sheet ────────────────────────────────────────────── */
+.scan-sheet {
+  background: var(--tg-surface);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  padding: 12px 24px 32px;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
+}
+
+.scan-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 99px;
+  margin-bottom: 4px;
+}
+
+/* ── Scan status states ──────────────────────────────────────── */
+.scan-status-idle,
+.scan-status-loading,
+.scan-status-success,
+.scan-status-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  animation: fadeUp 0.2s ease both;
+}
+
+.scan-status-icon { font-size: 32px; }
+.scan-status-title { font-size: 17px; font-weight: 700; }
+.scan-status-sub   { font-size: 13px; color: var(--tg-hint); max-width: 260px; line-height: 1.5; }
+
+.scan-status-success .scan-status-title { color: var(--success); }
+.scan-status-error   .scan-status-title { color: #ef4444; }
+
+.scan-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-bottom: 4px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.scan-retry-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--tg-text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 28px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.scan-retry-btn:hover { background: var(--border); }
+
+/* ── Global loader ───────────────────────────────────────────── */
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── Toast ───────────────────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: calc(100% - 32px);
+  max-width: 400px;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  animation: fadeUp 0.25s ease, fadeOut 0.3s ease 2.7s forwards;
+}
+
+.toast.success { border-color: rgba(34,197,94,0.4); }
+.toast.error   { border-color: rgba(239,68,68,0.4); }
+
+@keyframes fadeOut { to { opacity: 0; transform: translateY(-6px); } }

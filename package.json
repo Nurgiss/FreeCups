@@ -1,0 +1,20 @@
+{
+  "name": "freecups",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FreeCups coffee loyalty monorepo",
+  "workspaces": [
+    "backend",
+    "bot",
+    "scripts"
+  ],
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:bot":     "cd bot && npm run dev",
+    "dev":         "concurrently \"npm run dev:backend\" \"npm run dev:bot\"",
+    "install:all": "npm install && cd backend && npm install && cd ../bot && npm install && cd ../scripts && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
